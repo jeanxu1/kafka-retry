@@ -1,17 +1,5 @@
 debug: true
 
-config:
-  kafka:
-    consumer:
-      topic1:
-        main-topic: main1
-        retry-topic: retry1
-        dlq-topic: dlq1
-#        retry-interval: 30
-        fixed-interval: true
-        max-retries: 60
-
-
 spring:
   kafka:
     consumer:
@@ -23,3 +11,14 @@ spring:
       bootstrap-servers: 192.168.0.107:9092
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+nonblocking:
+  kafka-consumers:
+    - id: some-name
+      consumer-worker-class: ca.bc.jx.kafka.server.SampleRetryableWorker
+      main-topic: main1
+      retry-topic: retry1
+      dlq-topic: dlq1
+#      retry-interval: 200
+      fixed-interval: true
+      max-retries: 3

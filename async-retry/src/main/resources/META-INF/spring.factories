@@ -1,0 +1,1 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=ca.bc.jx.kafka.retry.worker.NonBlockingKafkaConsumerConfigure

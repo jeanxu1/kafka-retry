@@ -2,7 +2,7 @@ package ca.bc.jx.kafka.retry.worker;
 
 import java.util.function.Consumer;
 
-public interface RetryableWorker<T> extends Consumer<T> {
+public interface ConsumerWorker<T> extends Consumer<T> {
 
     default void retry(T o) {
         accept(o);
