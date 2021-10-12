@@ -1,0 +1,25 @@
+debug: true
+
+config:
+  kafka:
+    consumer:
+      topic1:
+        main-topic: main1
+        retry-topic: retry1
+        dlq-topic: dlq1
+#        retry-interval: 30
+        fixed-interval: true
+        max-retries: 60
+
+
+spring:
+  kafka:
+    consumer:
+      bootstrapServers: 192.168.0.107:9092
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      group-id: local-test-consumer
+    producer:
+      bootstrap-servers: 192.168.0.107:9092
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
