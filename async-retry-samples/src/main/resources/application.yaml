@@ -1,0 +1,33 @@
+debug: true
+
+spring:
+  kafka:
+    consumer:
+      bootstrapServers: lkafka:9092
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      group-id: async-consumer
+#      enable-auto-commit: false
+#      auto-offset-reset: earliest
+    producer:
+      bootstrap-servers: lkafka:9092
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+nonblocking:
+  kafka-consumers:
+    - id: some-name
+      consumer-worker-class: ca.bc.jx.kafka.server.SampleRetryableWorker
+      topic-main: async-main1
+      topic-retry: async-retry1
+      topic-dead-letter: async-dlq1
+      fixed-interval: true
+      max-retries: 5
+#    - id: some-name2
+#      consumer-worker-class: ca.bc.jx.kafka.server.SampleRetryableWorker
+#      topic-main: async-main2
+#      topic-main-listener-number: 2
+#      topic-retry: async-retry2
+#      topic-retry-listener-number: 10
+#      topic-dead-letter: async-dlq2
+#      retry-interval: 500

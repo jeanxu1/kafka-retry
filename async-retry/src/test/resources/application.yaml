@@ -1,24 +1,29 @@
 debug: true
+server:
+  port: 18000
+kafka:
+  embedded:
+    port: 39092
 
 spring:
   kafka:
     consumer:
-      bootstrapServers: 192.168.0.107:9092
+      bootstrapServers: localhost:39092
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      group-id: local-test-consumer
+      group-id: async-consumer
     producer:
-      bootstrap-servers: 192.168.0.107:9092
+      bootstrap-servers: localhost:39092
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
 nonblocking:
   kafka-consumers:
     - id: some-name
-      consumer-worker-class: ca.bc.jx.kafka.server.SampleRetryableWorker
-      main-topic: main1
-      retry-topic: retry1
-      dlq-topic: dlq1
-#      retry-interval: 200
+      consumer-worker-class: ca.bc.jx.ap.retry.kafka.SimpleConsumer
+      topic-main: async-main1
+      topic-retry: async-retry1
+      topic-dead-letter: async-dlq1
       fixed-interval: true
-      max-retries: 3
+      max-retries: 7
+      retry-interval: 5

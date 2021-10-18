@@ -1,5 +1,8 @@
 package ca.bc.jx.kafka.retry.exception;
 
+import lombok.NoArgsConstructor;
+
+@NoArgsConstructor
 public class NoRetryableException extends RuntimeException {
     public NoRetryableException(String s) {
         super(s);

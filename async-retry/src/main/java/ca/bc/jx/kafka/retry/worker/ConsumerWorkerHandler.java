@@ -43,10 +43,7 @@ final class ConsumerWorkerHandler<K, T> {
 
     @SneakyThrows
     void accept(ConsumerRecord<K, T> consumerRecord) {
-        RetryHeader header = getHeader(consumerRecord.headers());
-        if (null == header) {
-            header = new RetryHeader(properties.getMaxRetries(), Instant.now());
-        }
+        RetryHeader header = getHeaderWithDefault(consumerRecord.headers());
         try {
             if (header.getRetryRemains() >= properties.getMaxRetries()) {
                 log.debug("first time see this recording {}", consumerRecord.value());
@@ -55,7 +52,7 @@ final class ConsumerWorkerHandler<K, T> {
                 log.warn("It shouldn't be here. but max retry reached {}", consumerRecord.value());
                 drop(consumerRecord);
             } else if (header.getNextTryTime().isAfter(Instant.now())) {
-                log.info("need to wait a little bit longer");
+                log.warn("It shouldn't bee here. to wait a little bit longer");
                 nextRetry(consumerRecord, header);
             } else {
                 log.info("in retry, {} remains for {}", header.retryRemains, consumerRecord.value());
@@ -77,7 +74,7 @@ final class ConsumerWorkerHandler<K, T> {
         }
         Message<T> message = MessageBuilder.withPayload(consumerRecord.value())
                 .copyHeaders(header.toMap(consumerRecord.headers()))
-                .setHeader(KafkaHeaders.TOPIC, properties.getRetryTopic())
+                .setHeader(KafkaHeaders.TOPIC, properties.getTopicRetry())
                 .build();
         long millis = Duration.between(Instant.now(), header.getNextTryTime()).toMillis();
         SCHEDULED_EXECUTOR.schedule(() -> kafkaTemplate.send(message),
@@ -85,27 +82,27 @@ final class ConsumerWorkerHandler<K, T> {
     }
 
     @SneakyThrows
-    private RetryHeader getHeader(Headers headers) {
+    private RetryHeader getHeaderWithDefault(Headers headers) {
         if (null != headers && null != headers.lastHeader(RETRY_HEADER)
                 && null != headers.lastHeader(RETRY_HEADER).value()) {
             return OBJECT_MAPPER.readValue(headers.lastHeader(RETRY_HEADER).value(), RetryHeader.class);
         }
-        return null;
+        // if not found, we create a fresh new one
+        return new RetryHeader(properties.getMaxRetries(), Instant.now());
     }
 
     private RetryHeader getNextHeader(int remains) {
         long interval = properties.isFixedInterval() ? properties.getRetryInterval() :
                 (properties.getMaxRetries() - remains) * properties.getRetryInterval();
-        return new RetryHeader(remains - 1,
-                Instant.now().plus(interval, MILLIS));
+        return new RetryHeader(remains - 1, Instant.now().plus(interval, MILLIS));
     }
 
     private void drop(ConsumerRecord<K, T> consumerRecord) {
         log.warn("dropping the record {}", consumerRecord.value());
-        if (!StringUtils.isEmpty(properties.getDlQTopic())) {
+        if (!StringUtils.isEmpty(properties.getTopicDeadLetter())) {
             MessageBuilder<T> messageBuilder = MessageBuilder.withPayload(consumerRecord.value());
             consumerRecord.headers().forEach(header -> messageBuilder.setHeader(header.key(), header.value()));
-            kafkaTemplate.send(messageBuilder.setHeader(KafkaHeaders.TOPIC, properties.getDlQTopic()).build());
+            kafkaTemplate.send(messageBuilder.setHeader(KafkaHeaders.TOPIC, properties.getTopicDeadLetter()).build());
         }
         consumerWorker.drop(consumerRecord.value());
     }

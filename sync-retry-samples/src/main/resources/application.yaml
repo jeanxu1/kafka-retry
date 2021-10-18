@@ -1,0 +1,14 @@
+debug: true
+server:
+  port: 10080
+spring:
+  kafka:
+    consumer:
+      bootstrapServers: lkafka:9092
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      group-id: spring-retry-consumer
+    producer:
+      bootstrap-servers: lkafka:9092
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer

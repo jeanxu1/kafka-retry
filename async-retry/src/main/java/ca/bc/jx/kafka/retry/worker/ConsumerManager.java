@@ -8,9 +8,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.context.ApplicationContext;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.listener.ContainerProperties;
-import org.springframework.kafka.listener.KafkaMessageListenerContainer;
-import org.springframework.kafka.listener.MessageListener;
+import org.springframework.kafka.listener.*;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -26,6 +24,9 @@ public class ConsumerManager<K, V> {
     private final ConsumerFactory<K, V> consumerFactory;
     private final NonBlockingKafkaConsumerConfigure.ConsumerPropertyList propertyList;
 
+    /**
+     * get the ConsumerMap, in case of custom behavior, such as pause / resume the consumer.
+     */
     @Getter
     private Map<String, NonBlockingKafkaConsumer<K, V>> nonBlockingKafkaConsumerMap;
 
@@ -35,15 +36,33 @@ public class ConsumerManager<K, V> {
             ConsumerWorker<V> consumerWorker = applicationContext.getBean(property.getConsumerWorkerClass());
             ConsumerWorkerHandler<K, V> handler = new ConsumerWorkerHandler<K, V>(consumerWorker, kafkaTemplate, property);
 
-            ContainerProperties mainContainerProperties = new ContainerProperties(property.getMainTopic());
+            ContainerProperties mainContainerProperties = new ContainerProperties(property.getTopicMain());
             MessageListener<K, V> messageListener = handler::accept;
 
             mainContainerProperties.setMessageListener(messageListener);
-            KafkaMessageListenerContainer<K, V> mainContainer = new KafkaMessageListenerContainer<>(consumerFactory, mainContainerProperties);
+            AbstractMessageListenerContainer<K, V> mainContainer;
 
-            ContainerProperties retryContainerProperties = new ContainerProperties(property.getRetryTopic());
+            if (property.getTopicMainListenerNumber() > 1) {
+                ConcurrentMessageListenerContainer<K, V> container =
+                        new ConcurrentMessageListenerContainer<>(consumerFactory, mainContainerProperties);
+                container.setConcurrency(property.getTopicMainListenerNumber());
+                mainContainer = container;
+            } else {
+                mainContainer = new KafkaMessageListenerContainer<>(consumerFactory, mainContainerProperties);
+            }
+
+            ContainerProperties retryContainerProperties = new ContainerProperties(property.getTopicRetry());
             retryContainerProperties.setMessageListener(messageListener);
-            KafkaMessageListenerContainer<K, V> retryContainer = new KafkaMessageListenerContainer<>(consumerFactory, retryContainerProperties);
+            AbstractMessageListenerContainer<K, V> retryContainer;
+
+            if (property.getTopicRetryListenerNumber() > 1) {
+                ConcurrentMessageListenerContainer<K, V> container =
+                        new ConcurrentMessageListenerContainer<>(consumerFactory, retryContainerProperties);
+                container.setConcurrency(property.getTopicRetryListenerNumber());
+                retryContainer = container;
+            } else {
+                retryContainer = new KafkaMessageListenerContainer<>(consumerFactory, retryContainerProperties);
+            }
 
             mainContainer.start();
             retryContainer.start();
