@@ -34,7 +34,7 @@ public class ConsumerManager<K, V> {
     void startKafkaContainers() {
         nonBlockingKafkaConsumerMap = propertyList.stream().collect(Collectors.toUnmodifiableMap(RetryProperties::getId, property -> {
             ConsumerWorker<V> consumerWorker = applicationContext.getBean(property.getConsumerWorkerClass());
-            ConsumerWorkerHandler<K, V> handler = new ConsumerWorkerHandler<K, V>(consumerWorker, kafkaTemplate, property);
+            ConsumerWorkerHandler<K, V> handler = new ConsumerWorkerHandler<>(consumerWorker, kafkaTemplate, property);
 
             ContainerProperties mainContainerProperties = new ContainerProperties(property.getTopicMain());
             MessageListener<K, V> messageListener = handler::accept;

@@ -20,6 +20,7 @@ import org.springframework.messaging.support.MessageBuilder;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -116,7 +117,7 @@ final class ConsumerWorkerHandler<K, T> {
         private Instant nextTryTime;
 
         @SneakyThrows
-        public HashMap<String, Object> toMap(Headers headers) {
+        public Map<String, Object> toMap(Headers headers) {
             HashMap<String, Object> hashMap = new HashMap<>();
             for (Header header : headers) {
                 hashMap.put(header.key(), header.value());
