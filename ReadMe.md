@@ -49,3 +49,9 @@ That's all, the library will automatically listen to main and retry topic, and s
 topic.
 
 It also handles the wait/sleep and schedule behind the scenes, with minimum code needed.
+
+# Note
+If you can use Spring Kafka 2.7 or above, this library is not needed. 
+
+See: https://spring.io/blog/2021/04/14/spring-for-apache-kafka-2-7-0-available
+and https://evgeniy-khist.github.io/spring-kafka-non-blocking-retries-and-dlt/
